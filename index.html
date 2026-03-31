@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>妻友运营看板</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0d0f12;color:#e8eaf0;font-family:'Noto Sans SC',sans-serif;font-size:14px;min-height:100vh}
+.header{background:#13161b;border-bottom:1px solid rgba(255,255,255,0.07);padding:16px 32px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.hL{display:flex;align-items:center;gap:10px}
+.dot{width:8px;height:8px;border-radius:50%;background:#4a9eff;box-shadow:0 0 8px #4a9eff;animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.htitle{font-size:15px;font-weight:700}
+.hsub{font-size:12px;color:#7a8194;margin-top:2px}
+.dbadge{font-family:'DM Mono',monospace;font-size:11px;color:#7a8194;background:#1a1e25;border:1px solid rgba(255,255,255,0.07);padding:4px 10px;border-radius:4px}
+.main{padding:28px 32px;max-width:1400px;margin:0 auto}
+.kpi-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:24px}
+.kpi{background:#13161b;border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:18px 20px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:8px 8px 0 0}
+.kpi.blue::before{background:#4a9eff}
+.kpi.green::before{background:#3ecf8e}
+.kpi.amber::before{background:#f5a623}
+.klabel{font-size:11px;color:#7a8194;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+.kvalue{font-family:'DM Mono',monospace;font-size:28px;font-weight:500;line-height:1;margin-bottom:8px}
+.kpi.blue .kvalue{color:#4a9eff}
+.kpi.green .kvalue{color:#3ecf8e}
+.kpi.amber .kvalue{color:#f5a623}
+.kdelta{font-size:11px;color:#7a8194}
+.up{color:#3ecf8e}.down{color:#ff6b6b}
+.chart-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:16px}
+.cbox{background:#13161b;border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:20px}
+.wide{background:#13161b;border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:20px;margin-bottom:24px}
+.ctitle{font-size:13px;font-weight:500;margin-bottom:4px}
+.csub{font-size:11px;color:#4a5068;margin-bottom:12px}
+.cwrap{position:relative;height:200px}
+.wide .cwrap{height:160px}
+.leg{display:flex;gap:16px;margin-bottom:10px;flex-wrap:wrap}
+.li{display:flex;align-items:center;gap:5px;font-size:11px;color:#7a8194}
+.ld{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.tcard{background:#13161b;border:1px solid rgba(255,255,255,0.07);border-radius:8px;overflow:hidden;margin-bottom:24px}
+.thead2{padding:14px 20px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;justify-content:space-between;align-items:center}
+.ttitle{font-size:13px;font-weight:500}
+.tcount{font-size:11px;color:#4a5068;font-family:'DM Mono',monospace}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:10px;font-weight:500;color:#4a5068;letter-spacing:.08em;text-transform:uppercase;padding:10px 20px;border-bottom:1px solid rgba(255,255,255,0.07);background:#1a1e25}
+td{padding:10px 20px;font-size:12px;color:#e8eaf0;border-bottom:1px solid rgba(255,255,255,0.04);font-family:'DM Mono',monospace}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,0.02)}
+.good{color:#3ecf8e}.warn{color:#f5a623}.bad{color:#ff6b6b}
+.footer{padding:16px 32px;border-top:1px solid rgba(255,255,255,0.07);font-size:11px;color:#4a5068;display:flex;justify-content:space-between;font-family:'DM Mono',monospace}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="hL">
+    <div class="dot"></div>
+    <div><div class="htitle">妻友运营看板</div><div class="hsub">uapp.live · 日活 · 新增 · 充值</div></div>
+  </div>
+  <div class="dbadge" id="dt"></div>
+</div>
+<div class="main">
+  <div class="kpi-grid">
+    <div class="kpi blue"><div class="klabel">最新日活 DAU</div><div class="kvalue" id="k1">-</div><div class="kdelta" id="k1d">-</div></div>
+    <div class="kpi green"><div class="klabel">最新新增</div><div class="kvalue" id="k2">-</div><div class="kdelta" id="k2d">-</div></div>
+    <div class="kpi amber"><div class="klabel">充值（万元）</div><div class="kvalue" id="k3">-</div><div class="kdelta" id="k3d">-</div></div>
+  </div>
+  <div class="chart-grid">
+    <div class="cbox">
+      <div class="ctitle">日活趋势 DAU</div><div class="csub">最近30天</div>
+      <div class="leg"><div class="li"><div class="ld" style="background:#4a9eff"></div>日活</div></div>
+      <div class="cwrap"><canvas id="c1"></canvas></div>
+    </div>
+    <div class="cbox">
+      <div class="ctitle">新增趋势</div><div class="csub">最近30天</div>
+      <div class="leg"><div class="li"><div class="ld" style="background:#3ecf8e"></div>新增</div></div>
+      <div class="cwrap"><canvas id="c2"></canvas></div>
+    </div>
+  </div>
+  <div class="wide">
+    <div class="ctitle">充值金额趋势（元）</div><div class="csub">最近30天</div>
+    <div class="leg"><div class="li"><div class="ld" style="background:#f5a623"></div>充值</div></div>
+    <div class="cwrap"><canvas id="c3"></canvas></div>
+  </div>
+  <div class="tcard">
+    <div class="thead2"><div class="ttitle">明细数据</div><div class="tcount" id="tc"></div></div>
+    <table>
+      <thead><tr><th>日期</th><th>日活 DAU</th><th>新增</th><th>充值（元）</th><th>充值/日活</th></tr></thead>
+      <tbody id="tb"></tbody>
+    </table>
+  </div>
+</div>
+<div class="footer">
+  <span>数据来源：妻友 Google Sheets · 自动导入</span>
+  <span id="ft"></span>
+</div>
+<script>
+var D = {"labels": ["2月28日", "3月1日", "3月2日", "3月3日", "3月4日", "3月5日", "3月6日", "3月7日", "3月8日", "3月9日", "3月10日", "3月11日", "3月12日", "3月13日", "3月14日", "3月15日", "3月16日", "3月17日", "3月18日", "3月19日", "3月20日", "3月21日", "3月22日", "3月23日", "3月24日", "3月25日", "3月26日", "3月27日", "3月28日", "3月29日"], "dau": [37995, 38509, 35905, 36070, 34914, 33867, 33252, 33224, 35176, 33563, 35610, 37472, 37624, 40661, 42764, 44558, 39989, 38945, 37541, 37351, 38146, 41544, 43819, 40050, 38430, 37891, 37066, 36333, 37849, 39354], "xin": [26872, 27077, 24620, 24965, 23658, 22467, 22369, 22620, 24098, 22631, 24655, 26137, 26027, 29311, 31619, 33133, 28561, 27226, 26077, 26034, 27272, 30644, 32497, 28577, 26905, 26587, 26004, 25211, 27050, 28012], "rev": [20000, 20100, 17100, 16200, 13200, 17500, 14500, 15800, 10800, 17700, 8800, 13700, 11100, 11800, 10200, 13500, 14500, 12400, 13900, 12300, 9000, 10700, 11000, 10300, 10900, 10300, 10400, 11600, 12500, 17300], "cvr": [52.64, 52.2, 47.63, 44.91, 37.81, 51.67, 43.61, 47.56, 30.7, 52.74, 24.71, 36.56, 29.5, 29.02, 23.85, 30.3, 36.26, 31.84, 37.03, 32.93, 23.59, 25.76, 25.1, 25.72, 28.36, 27.18, 28.06, 31.93, 33.03, 43.96]};
+document.getElementById('dt').textContent = new Date().toLocaleDateString('zh-CN');
+document.getElementById('ft').textContent = 'dashboard.html · ' + new Date().toLocaleString('zh-CN');
+var n = D.labels.length;
+function fmt(v){return v>=10000?(v/10000).toFixed(1)+'万':v.toLocaleString();}
+function delta(cur,prev){
+  var diff=cur-prev, up=diff>=0;
+  return {cls:up?'up':'down', text:(up?'↑':'↓')+' '+Math.abs(diff).toLocaleString()+' 较昨日'};
+}
+function setK(id,did,val,prev){
+  document.getElementById(id).textContent=fmt(val);
+  var d=delta(val,prev);
+  var el=document.getElementById(did);
+  el.className='kdelta '+d.cls; el.textContent=d.text;
+}
+setK('k1','k1d',D.dau[n-1],D.dau[n-2]);
+setK('k2','k2d',D.xin[n-1],D.xin[n-2]);
+setK('k3','k3d',D.rev[n-1],D.rev[n-2]);
+var gc=function(r,g,b,a){return 'rgba('+r+','+g+','+b+','+a+')'};
+var baseOpts=function(cb){return {responsive:true,maintainAspectRatio:false,
+  plugins:{legend:{display:false},tooltip:{backgroundColor:'#1a1e25',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,titleColor:'#7a8194',bodyColor:'#e8eaf0',padding:10,callbacks:{label:function(c){return ' '+(cb?cb(c.raw):c.raw.toLocaleString())}}}},
+  scales:{x:{ticks:{font:{size:10,family:'DM Mono'},color:'#4a5068',maxRotation:45,autoSkip:true},grid:{color:'rgba(255,255,255,0.04)'}},
+          y:{ticks:{font:{size:10,family:'DM Mono'},color:'#4a5068',callback:cb||(function(v){return v.toLocaleString()})},grid:{color:'rgba(255,255,255,0.04)'}}}};};
+new Chart(document.getElementById('c1'),{type:'line',data:{labels:D.labels,datasets:[{data:D.dau,borderColor:'#4a9eff',backgroundColor:'rgba(74,158,255,0.08)',tension:0.3,pointRadius:2,borderWidth:2,fill:true}]},options:baseOpts()});
+new Chart(document.getElementById('c2'),{type:'line',data:{labels:D.labels,datasets:[{data:D.xin,borderColor:'#3ecf8e',backgroundColor:'rgba(62,207,142,0.08)',tension:0.3,pointRadius:2,borderWidth:2,fill:true}]},options:baseOpts()});
+new Chart(document.getElementById('c3'),{type:'bar',data:{labels:D.labels,datasets:[{data:D.rev,backgroundColor:'rgba(245,166,35,0.7)',borderRadius:3,borderSkipped:false}]},options:baseOpts()});
+var tb=document.getElementById('tb');
+document.getElementById('tc').textContent=n+' 条记录';
+for(var i=n-1;i>=0;i--){
+  var tr=document.createElement('tr');
+  var ratio=D.dau[i]?((D.rev[i]/D.dau[i])*100).toFixed(2)+'%':'-';
+  var rc=parseFloat(ratio)>=5?'good':parseFloat(ratio)>=2?'':'warn';
+  tr.innerHTML='<td>'+D.labels[i]+'</td><td>'+D.dau[i].toLocaleString()+'</td><td>'+D.xin[i].toLocaleString()+'</td><td>'+D.rev[i].toLocaleString()+'</td><td class="'+rc+'">'+ratio+'</td>';
+  tb.appendChild(tr);
+}
+</script>
+</body>
+</html>
